@@ -9,6 +9,7 @@ pub struct Searcher {
     store: Store,
     embedder: Embedder,
     ollama: Ollama,
+    model: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -29,7 +30,12 @@ impl Searcher {
             store,
             embedder,
             ollama: Ollama::default(),
+            model: "llama3.2".to_string(),
         }
+    }
+
+    pub fn set_model(&mut self, model: String) {
+        self.model = model;
     }
 
     pub async fn search(&mut self, query_str: &str) -> Result<Vec<Movie>> {
@@ -64,7 +70,7 @@ impl Searcher {
             query
         );
 
-        match self.ollama.generate(GenerationRequest::new("llama3.2".to_string(), prompt)).await {
+        match self.ollama.generate(GenerationRequest::new(self.model.clone(), prompt)).await {
             Ok(res) => {
                 let response_text = res.response;
                 if let Some(start) = response_text.find('{') {

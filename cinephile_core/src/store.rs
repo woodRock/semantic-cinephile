@@ -23,18 +23,14 @@ impl Store {
         
         db.use_ns("cinephile").use_db("movies").await?;
         
-        // Define full-text index for title and plot using correct 1.x syntax
-        // Analyzer 'ascii' is built-in, BM25 is the scoring algorithm
-        let _ = db.query("DEFINE INDEX movie_search ON TABLE movie FIELDS title, plot SEARCH ANALYZER ascii BM25").await;
-
         Ok(Self { db })
     }
 
     pub async fn upsert_movie(&self, movie: Movie) -> Result<()> {
-        let results = self.db.query("UPSERT movie CONTENT $movie")
-            .bind(("movie", movie))
+        let id = urlencoding::encode(&movie.filepath).replace("%", "");
+        let _: Option<serde_json::Value> = self.db.update(("movie", &id))
+            .content(movie)
             .await?;
-        results.check()?;
         Ok(())
     }
 

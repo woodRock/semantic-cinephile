@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Movie {
-    pub id: String,             // UUID
+    pub uuid: String,           // Internal UUID
     pub filepath: String,       // Absolute path
     pub filename: String,       // Original filename
     pub title: String,          // Cleaned title (e.g., "The Matrix")
@@ -18,7 +18,7 @@ pub struct Movie {
 impl Movie {
     pub fn new(filepath: String, filename: String, title: String) -> Self {
         Self {
-            id: Uuid::new_v4().to_string(),
+            uuid: Uuid::new_v4().to_string(),
             filepath,
             filename,
             title,

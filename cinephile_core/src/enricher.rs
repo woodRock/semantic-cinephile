@@ -10,6 +10,7 @@ pub struct Enricher {
     tmdb_api_key: String,
     ollama: Ollama,
     http_client: Client,
+    model: String,
 }
 
 #[derive(Deserialize)]
@@ -51,7 +52,12 @@ impl Enricher {
             tmdb_api_key,
             ollama: Ollama::default(),
             http_client: Client::new(),
+            model: "llama3.2".to_string(),
         })
+    }
+
+    pub fn set_model(&mut self, model: String) {
+        self.model = model;
     }
 
     pub async fn enrich(&self, mut movie: Movie) -> Result<Movie> {
@@ -97,7 +103,7 @@ impl Enricher {
             filename
         );
         
-        match self.ollama.generate(GenerationRequest::new("llama3.2".to_string(), prompt)).await {
+        match self.ollama.generate(GenerationRequest::new(self.model.clone(), prompt)).await {
             Ok(res) => {
                 let response_text = res.response;
                 // Attempt to parse JSON from response

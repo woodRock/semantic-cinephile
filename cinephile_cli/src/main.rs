@@ -23,6 +23,8 @@ enum Commands {
     Config {
         #[arg(long)]
         set_tmdb_key: Option<String>,
+        #[arg(long)]
+        set_ollama_model: Option<String>,
     },
     /// Add a directory to the watch list
     Add {
@@ -38,10 +40,26 @@ enum Commands {
     },
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 struct AppConfig {
     tmdb_api_key: Option<String>,
+    #[serde(default = "default_ollama_model")]
+    ollama_model: String,
     watched_directories: Vec<PathBuf>,
+}
+
+fn default_ollama_model() -> String {
+    "llama3.2".to_string()
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        Self {
+            tmdb_api_key: None,
+            ollama_model: default_ollama_model(),
+            watched_directories: vec![],
+        }
+    }
 }
 
 #[derive(Tabled)]
@@ -70,12 +88,16 @@ async fn main() -> Result<()> {
     };
 
     match cli.command {
-        Commands::Config { set_tmdb_key } => {
+        Commands::Config { set_tmdb_key, set_ollama_model } => {
             if let Some(key) = set_tmdb_key {
                 config.tmdb_api_key = Some(key);
-                fs::write(&config_path, serde_json::to_string_pretty(&config)?)?;
                 println!("TMDB API key updated.");
             }
+            if let Some(model) = set_ollama_model {
+                config.ollama_model = model;
+                println!("Ollama model updated to: {}", config.ollama_model);
+            }
+            fs::write(&config_path, serde_json::to_string_pretty(&config)?)?;
         }
         Commands::Add { path } => {
             let abs_path = fs::canonicalize(path)?;
@@ -95,7 +117,8 @@ async fn main() -> Result<()> {
 
             let store = Store::new().await?;
             let mut embedder = Embedder::new().await?;
-            let enricher = Enricher::new()?;
+            let mut enricher = Enricher::new()?;
+            enricher.set_model(config.ollama_model.clone());
 
             println!("Scanning directories...");
             let mut file_stream = scan_directories(config.watched_directories);
@@ -103,6 +126,7 @@ async fn main() -> Result<()> {
             while let Some(path) = file_stream.next().await {
                 files.push(path);
             }
+            println!("Found {} files to index.", files.len());
 
             let pb = ProgressBar::new(files.len() as u64);
             pb.set_style(ProgressStyle::default_bar()
@@ -113,22 +137,27 @@ async fn main() -> Result<()> {
                 let filename = path.file_name().unwrap().to_str().unwrap().to_string();
                 pb.set_message(format!("Processing {}", filename));
                 
-                let movie = Movie::new(path.to_str().unwrap().to_string(), filename, "".to_string());
+                let movie = Movie::new(path.to_str().unwrap().to_string(), filename.clone(), "".to_string());
                 
                 match enricher.enrich(movie).await {
                     Ok(mut enriched) => {
+                        if enriched.title.is_empty() {
+                            pb.println(format!("Warning: Could not enrich metadata for {}", filename));
+                        }
                         let text_to_embed = format!("{} {}", enriched.title, enriched.plot);
                         match embedder.embed(&text_to_embed) {
                             Ok(vector) => {
                                 enriched.vector = vector;
                                 if let Err(e) = store.upsert_movie(enriched).await {
-                                    pb.set_message(format!("Error storing {}: {}", path.display(), e));
+                                    pb.println(format!("Error storing {}: {}", filename, e));
+                                } else {
+                                    pb.println(format!("Successfully indexed: {}", filename));
                                 }
                             }
-                            Err(e) => pb.set_message(format!("Error embedding {}: {}", path.display(), e)),
+                            Err(e) => pb.println(format!("Error embedding {}: {}", filename, e)),
                         }
                     }
-                    Err(e) => pb.set_message(format!("Error enriching {}: {}", path.display(), e)),
+                    Err(e) => pb.println(format!("Error enriching {}: {}", filename, e)),
                 }
                 pb.inc(1);
             }
@@ -143,8 +172,10 @@ async fn main() -> Result<()> {
             let store = Store::new().await?;
             let embedder = Embedder::new().await?;
             let mut searcher = Searcher::new(store, embedder);
+            searcher.set_model(config.ollama_model.clone());
 
             let results = searcher.search(&query).await?;
+            println!("Found {} results.", results.len());
             
             if results.is_empty() {
                 println!("No results found.");
