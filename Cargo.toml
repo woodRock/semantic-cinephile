@@ -11,6 +11,8 @@ resolver = "2"
 cargo-dist-version = "0.14.1"
 # CI backends to support
 ci = ["github"]
+# Allow custom CI script
+allow-dirty = ["ci"]
 # The installers to generate for each release
 installers = ["shell", "powershell"]
 # Target platforms to build binaries for
@@ -19,4 +21,10 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 publish-jobs = ["homebrew"]
 # Whether to install an updater binary
 install-updater = true
+
+# The profile that 'cargo dist' will use to build
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
 
