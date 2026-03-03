@@ -23,8 +23,9 @@ impl Store {
         
         db.use_ns("cinephile").use_db("movies").await?;
         
-        // Define full-text index for title and plot
-        db.query("DEFINE INDEX movie_search ON TABLE movie FIELDS title, plot SEARCH ANALYZER bm25").await?;
+        // Define full-text index for title and plot using correct 1.x syntax
+        // Analyzer 'ascii' is built-in, BM25 is the scoring algorithm
+        let _ = db.query("DEFINE INDEX movie_search ON TABLE movie FIELDS title, plot SEARCH ANALYZER ascii BM25").await;
 
         Ok(Self { db })
     }

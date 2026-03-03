@@ -20,7 +20,8 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "x86_64-pc-windows
 # Publish jobs to run in CI
 publish-jobs = ["homebrew"]
 # Whether to install an updater binary
-install-updater = true
+install-updater = false
+
 
 # The profile that 'cargo dist' will use to build
 [profile.dist]
