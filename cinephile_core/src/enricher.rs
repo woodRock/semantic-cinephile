@@ -1,6 +1,10 @@
 use anyhow::{Result, Context};
 use crate::models::Movie;
-use ollama_rs::{Ollama, generation::completion::request::GenerationRequest};
+use ollama_rs::{
+    Ollama, 
+    generation::completion::request::GenerationRequest,
+    generation::parameters::FormatType
+};
 use regex::Regex;
 use reqwest::Client;
 use serde::Deserialize;
@@ -97,25 +101,22 @@ impl Enricher {
             return Ok((title, year));
         }
 
-        // Fallback to Ollama
+        // Fallback to Ollama with JSON mode
         let prompt = format!(
-            "Extract the movie title and year from this filename: '{}'. Respond ONLY with JSON like {{ \"title\": \"...\", \"year\": 2024 }}",
+            "Analyze this film filename and extract the title and release year. Return a JSON object with 'title' (string) and 'year' (integer or null). Filename: '{}'",
             filename
         );
         
-        match self.ollama.generate(GenerationRequest::new(self.model.clone(), prompt)).await {
+        let request = GenerationRequest::new(self.model.clone(), prompt)
+            .format(FormatType::Json);
+        
+        match self.ollama.generate(request).await {
             Ok(res) => {
                 let response_text = res.response;
-                // Attempt to parse JSON from response
-                if let Some(start) = response_text.find('{') {
-                    if let Some(end) = response_text.rfind('}') {
-                        let json_str = &response_text[start..=end];
-                        if let Ok(data) = serde_json::from_str::<serde_json::Value>(json_str) {
-                            let title = data["title"].as_str().unwrap_or(filename).to_string();
-                            let year = data["year"].as_u64().map(|y| y as u16);
-                            return Ok((title, year));
-                        }
-                    }
+                if let Ok(data) = serde_json::from_str::<serde_json::Value>(&response_text) {
+                    let title = data["title"].as_str().unwrap_or(filename).to_string();
+                    let year = data["year"].as_u64().map(|y| y as u16);
+                    return Ok((title, year));
                 }
             }
             Err(_) => {}

@@ -2,7 +2,11 @@ use anyhow::Result;
 use crate::models::Movie;
 use crate::store::Store;
 use crate::embedder::Embedder;
-use ollama_rs::{Ollama, generation::completion::request::GenerationRequest};
+use ollama_rs::{
+    Ollama, 
+    generation::completion::request::GenerationRequest,
+    generation::parameters::FormatType
+};
 use serde::{Deserialize, Serialize};
 
 pub struct Searcher {
@@ -66,20 +70,18 @@ impl Searcher {
 
     async fn classify_intent(&self, query: &str) -> Result<SearchIntent> {
         let prompt = format!(
-            "Analyze the movie search query: '{}'. Return JSON: {{ \"is_semantic\": bool, \"filters\": {{ \"director\": string or null, \"year\": int or null }} }}",
+            "Analyze the movie search query: '{}'. Return a JSON object with 'is_semantic' (boolean) and 'filters' (object with 'director' and 'year' fields, or null).",
             query
         );
 
-        match self.ollama.generate(GenerationRequest::new(self.model.clone(), prompt)).await {
+        let request = GenerationRequest::new(self.model.clone(), prompt)
+            .format(FormatType::Json);
+
+        match self.ollama.generate(request).await {
             Ok(res) => {
                 let response_text = res.response;
-                if let Some(start) = response_text.find('{') {
-                    if let Some(end) = response_text.rfind('}') {
-                        let json_str = &response_text[start..=end];
-                        if let Ok(intent) = serde_json::from_str::<SearchIntent>(json_str) {
-                            return Ok(intent);
-                        }
-                    }
+                if let Ok(intent) = serde_json::from_str::<SearchIntent>(&response_text) {
+                    return Ok(intent);
                 }
             }
             Err(_) => {}
