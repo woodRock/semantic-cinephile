@@ -1,0 +1,27 @@
+# Rust build artifacts
+/target
+Cargo.lock
+
+# Environment variables (TMDB API Keys, etc.)
+.env
+.env.*
+
+# Local IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific data (if run locally)
+**/lancedb/
+**/surreal/
+**/db/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# cargo-dist artifacts
+dist/
+dist-manifest.json
+plan.json

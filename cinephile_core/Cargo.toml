@@ -1,0 +1,31 @@
+[package]
+name = "cinephile_core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+thiserror = "1.0"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+directories = "5.0"
+dotenvy = "0.15"
+walkdir = "2.4"
+mime_guess = "2.0"
+# Using 2.0.0-rc.9 as a stable-ish candidate for modern ort features
+ort = "2.0.0-rc.9"
+ollama-rs = "0.3.4"
+# SurrealDB for storage
+surrealdb = { version = "1.0", features = ["kv-rocksdb"] }
+reqwest = { version = "0.11", features = ["json"] }
+uuid = { version = "1.6", features = ["v4", "serde"] }
+futures-util = "0.3"
+regex = "1.10"
+tokenizers = "0.15"
+urlencoding = "2.1"
+arrow-array = "57.0"
+arrow-schema = "57.0"
+async-trait = "0.1.77"
+log = "0.4"
+env_logger = "0.11"
