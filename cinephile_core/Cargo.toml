@@ -14,7 +14,7 @@ dotenvy = "0.15"
 walkdir = "2.4"
 mime_guess = "2.0"
 # Using 2.0.0-rc.9 as a stable-ish candidate for modern ort features
-ort = { version = "2.0.0-rc.9", features = ["load-dynamic"] }
+ort = { version = "2.0.0-rc.9" }
 ollama-rs = "0.3.4"
 # SurrealDB for storage
 surrealdb = { version = "1.0", features = ["kv-rocksdb"] }
