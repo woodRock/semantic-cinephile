@@ -13,7 +13,7 @@ directories = "5.0"
 dotenvy = "0.15"
 walkdir = "2.4"
 mime_guess = "2.0"
-# Using 2.0.0-rc.9 as a stable-ish candidate for modern ort features
+# Using 2.0.0-rc.11 for modern features
 ort = { version = "2.0.0-rc.11", features = ["copy-dylibs"] }
 ollama-rs = "0.3.4"
 # SurrealDB for storage
