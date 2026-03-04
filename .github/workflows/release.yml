@@ -21,18 +21,22 @@ jobs:
             target: x86_64-unknown-linux-gnu
             artifact_name: cinephile-linux-x86_64
             archive_format: tar.gz
+            rustflags: ""
           - os: macos-12
             target: x86_64-apple-darwin
             artifact_name: cinephile-macos-x86_64
             archive_format: tar.gz
+            rustflags: ""
           - os: macos-latest
             target: aarch64-apple-darwin
             artifact_name: cinephile-macos-aarch64
             archive_format: tar.gz
+            rustflags: ""
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             artifact_name: cinephile-windows-x86_64
             archive_format: zip
+            rustflags: "-C target-feature=+crt-static"
 
     steps:
       - name: Checkout Code
@@ -59,6 +63,8 @@ jobs:
 
       - name: Build Binary
         run: cargo build --release --target ${{ matrix.target }} -p cinephile_cli
+        env:
+          RUSTFLAGS: ${{ matrix.rustflags }}
 
       - name: Package Binary
         shell: bash
