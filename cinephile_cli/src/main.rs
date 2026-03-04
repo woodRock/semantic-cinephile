@@ -49,7 +49,7 @@ struct AppConfig {
 }
 
 fn default_ollama_model() -> String {
-    "llama3.2".to_string()
+    "qwen3.5:0.8b".to_string()
 }
 
 impl Default for AppConfig {

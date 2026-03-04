@@ -56,7 +56,7 @@ impl Enricher {
             tmdb_api_key,
             ollama: Ollama::default(),
             http_client: Client::new(),
-            model: "llama3.2".to_string(),
+            model: "qwen3.5:0.8b".to_string(),
         })
     }
 
