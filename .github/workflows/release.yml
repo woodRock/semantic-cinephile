@@ -21,7 +21,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
             artifact_name: cinephile-linux-x86_64
             archive_format: tar.gz
-          - os: macos-latest
+          - os: macos-13
             target: x86_64-apple-darwin
             artifact_name: cinephile-macos-x86_64
             archive_format: tar.gz
@@ -58,9 +58,6 @@ jobs:
         run: choco install protoc
 
       - name: Build Binary
-        env:
-          # Intel Mac binaries are not prebuilt by pyke for rc.11, so we must compile from source
-          ORT_STRATEGY: ${{ matrix.target == 'x86_64-apple-darwin' && 'compile' || 'download' }}
         run: cargo build --release --target ${{ matrix.target }} -p cinephile_cli
 
       - name: Package Binary

@@ -14,6 +14,18 @@ dotenvy = "0.15"
 walkdir = "2.4"
 mime_guess = "2.0"
 # Using 2.0.0-rc.11 for modern features
+ort = { version = "2.0.0-rc.11", optional = true }
+
+[target.'cfg(all(target_os = "macos", target_arch = "x86_64"))'.dependencies]
+ort = { version = "2.0.0-rc.11", features = ["copy-dylibs"] }
+
+[target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
+ort = { version = "2.0.0-rc.11", features = ["copy-dylibs", "coreml"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+ort = { version = "2.0.0-rc.11", features = ["copy-dylibs"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
 ort = { version = "2.0.0-rc.11", features = ["copy-dylibs"] }
 ollama-rs = "0.3.4"
 # SurrealDB for storage
